@@ -145,8 +145,8 @@ def main():
 	train['label_class']=(train['target'].values > 0.5).astype(int)
 
 	# Elmo Embeddings
-	options_file = '../../../vectors/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json'
-	weight_file =  '../../../vectors/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5'
+	options_file = '../../vectors/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json'
+	weight_file =  '../../vectors/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5'
 	elmo = Elmo(options_file, weight_file, 1, dropout=0)
 	# ## Train/Test Split
 	data_split = int(0.8*len(train))
