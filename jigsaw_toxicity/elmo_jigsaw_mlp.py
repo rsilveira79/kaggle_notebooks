@@ -158,12 +158,12 @@ def main():
 	print("[PRE-COMPUTING ELMo]")
 	train_elmos = np.zeros((len(train_dataset), elmo.get_output_dim()))
 	for i in range(len(train_dataset)):
-		elmo_phrase = get_elmo(train_dataset.loc[i]['clean_comment_text']).detach().cpu().numpy()
+		elmo_phrase = get_elmo(train_dataset.loc[i]['clean_comment_text'], elmo).detach().cpu().numpy()
 		train_elmos[i]= elmo_phrase
 
 	valid_elmos = np.zeros((len(valid_dataset), elmo.get_output_dim()))
 	for i in range(len(valid_dataset)):
-		elmo_phrase = get_elmo(valid_dataset.loc[i]['clean_comment_text']).detach().cpu().numpy()
+		elmo_phrase = get_elmo(valid_dataset.loc[i]['clean_comment_text'], elmo).detach().cpu().numpy()
 		valid_elmos[i]= elmo_phrase
 
 	train_labels = train_dataset.label_class
