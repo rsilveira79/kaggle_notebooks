@@ -80,18 +80,18 @@ def get_elmo(sent, elmo):
 
 ### Intents Dataloader
 class IntentsPrecomp(Dataset):
-    def __init__(self, data_x, data_y):
-        self.len = len(data_x)
-        self.data = data_x
-        self.label = data_y
-        
-    def __getitem__(self, index):
-        X = torch.tensor(self.data[index], dtype=torch.float32)
-        y = torch.tensor(self.label[index], dtype=torch.int64)
-        return X, y
-    
-    def __len__(self):
-        return self.len
+	def __init__(self, data_x, data_y):
+		self.len = len(data_x)
+		self.data = data_x
+		self.label = data_y
+		
+	def __getitem__(self, index):
+		X = torch.tensor(self.data[index], dtype=torch.float32)
+		y = torch.tensor(self.label[index], dtype=torch.int64)
+		return X, y
+	
+	def __len__(self):
+		return self.len
 
 ### MLP Model
 class MLPUncertainty(nn.Module):
@@ -231,8 +231,8 @@ def main():
 				# Print Loss
 				print('Iteration: {}. Loss: {}. Accuracy: {}%'.format(i, loss.data, accuracy))
 				with open('results_training.csv','a') as csvfile:
-            		dataset_writer = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_MINIMAL)
-            		dataset_writer.writerow([epoch, i, loss.data, accuracy])
+					dataset_writer = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+					dataset_writer.writerow([epoch, i, loss.data, accuracy])
 				
 	## Save Model
 	model_file = 'model_elmo.pth'
