@@ -135,6 +135,11 @@ class MLPUncertainty(nn.Module):
 def main():
 	warnings.filterwarnings('ignore')
 	
+	# Training results
+	with open('results_training.csv','w') as csvfile:
+		dataset_writer = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+		dataset_writer.writerow(["epoch", "iteration","loss", "accuracy"])
+
 	print("[GPU]: {}".format(torch.cuda.is_available()))
 	train = pd.read_csv('dataset/train.csv')
 	test = pd.read_csv('dataset/test.csv')
@@ -225,6 +230,9 @@ def main():
 				accuracy = 100.00 * correct.numpy() / total
 				# Print Loss
 				print('Iteration: {}. Loss: {}. Accuracy: {}%'.format(i, loss.data, accuracy))
+				with open('results_training.csv','a') as csvfile:
+            		dataset_writer = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+            		dataset_writer.writerow([epoch, i, loss.data, accuracy])
 				
 	## Save Model
 	model_file = 'model_elmo.pth'
