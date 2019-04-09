@@ -19,6 +19,7 @@ print(torch.__version__)
 
 
 ### NLP Libs
+import csv
 import allennlp
 from allennlp.modules.elmo import Elmo, batch_to_ids
 import spacy
@@ -78,20 +79,19 @@ def get_elmo(sent, elmo):
 	return avg
 
 ### Intents Dataloader
-class Intents(Dataset):
-	def __init__(self, dataframe, elmo):
-		self.len = len(dataframe)
-		self.data = dataframe
-		self.elmo = elmo
-		
-	def __getitem__(self, index):
-		phrase = self.data.clean_comment_text[index]
-		X = get_elmo(phrase, self.elmo)
-		y = self.data.label_class[index]
-		return X, y
-	
-	def __len__(self):
-		return self.len
+class IntentsPrecomp(Dataset):
+    def __init__(self, data_x, data_y):
+        self.len = len(data_x)
+        self.data = data_x
+        self.label = data_y
+        
+    def __getitem__(self, index):
+        X = torch.tensor(self.data[index], dtype=torch.float32)
+        y = torch.tensor(self.label[index], dtype=torch.int64)
+        return X, y
+    
+    def __len__(self):
+        return self.len
 
 ### MLP Model
 class MLPUncertainty(nn.Module):
@@ -139,7 +139,7 @@ def main():
 	train = pd.read_csv('dataset/train.csv')
 	test = pd.read_csv('dataset/test.csv')
 
-	# ## Apply dataset text cleaning and suffling the train dataset
+	# Apply dataset text cleaning and suffling the train dataset
 	train['clean_comment_text']=train['comment_text'].apply(lambda x: transformText(x))
 	train = train.sample(frac=1).reset_index(drop=True)
 	train['label_class']=(train['target'].values > 0.5).astype(int)
@@ -148,17 +148,35 @@ def main():
 	options_file = '../../vectors/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json'
 	weight_file =  '../../vectors/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5'
 	elmo = Elmo(options_file, weight_file, 1, dropout=0)
-	# ## Train/Test Split
+
+	# Train/Test Split
 	data_split = int(0.8*len(train))
 	train_dataset = train[:data_split]
 	valid_dataset = train[data_split:-1].reset_index(drop=True)
-	training_set = Intents(train_dataset, elmo)
-	validing_set = Intents(valid_dataset, elmo)
+
+	# Pre-computed ELMos
+	print("[PRE-COMPUTING ELMo]")
+	train_elmos = np.zeros((len(train_dataset), elmo.get_output_dim()))
+	for i in range(len(train_dataset)):
+		elmo_phrase = get_elmo(train_dataset.loc[i]['clean_comment_text']).detach().cpu().numpy()
+		train_elmos[i]= elmo_phrase
+
+	valid_elmos = np.zeros((len(valid_dataset), elmo.get_output_dim()))
+	for i in range(len(valid_dataset)):
+		elmo_phrase = get_elmo(valid_dataset.loc[i]['clean_comment_text']).detach().cpu().numpy()
+		valid_elmos[i]= elmo_phrase
+
+	train_labels = train_dataset.label_class
+	valid_labels = valid_dataset.label_class
+	training_set = IntentsPrecomp(train_elmos, train_labels)
+	validing_set = IntentsPrecomp(valid_elmos, valid_labels)
+
 	params = {'batch_size': 64, 'shuffle': True, 'num_workers': 0}
 	training_loader = DataLoader(training_set, **params)
 	testing_loader = DataLoader(validing_set, **params)
 
 	## Model Instatiation
+	print("[START TRAINING]")
 	INP_DIM = elmo.get_output_dim()
 	NUM_LABELS = len(set(train.label_class))
 	NHIDDEN = 1024
