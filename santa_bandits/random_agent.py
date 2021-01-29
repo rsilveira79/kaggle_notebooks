@@ -1,6 +1,6 @@
 import random
-# import jsonlines
-# import json
+import jsonlines
+import json
 
 def random_agent(observation, configuration):
 
@@ -10,6 +10,6 @@ def random_agent(observation, configuration):
 		"observation": observation,
 		"configuration": configuration
 	}
-	# with jsonlines.open('random_agent.jsonl', 'a') as writer:
-	# 	writer.write(stored_data)
+	with jsonlines.open('random_agent.jsonl', 'a') as writer:
+		writer.write(stored_data)
 	return arm
